@@ -57,7 +57,7 @@ else:
 class QUTest:
 
     # public class constants
-    VERSION = 740
+    VERSION = 741
     TIMEOUT = 1.000 # timeout value [seconds]
 
     # private class variables
@@ -78,6 +78,7 @@ class QUTest:
     _test_start  = 0
 
     # private command-line options
+    _opt_trace         = False
     _opt_exit_on_fail  = False
     _opt_interactive   = False
     _opt_clear_qspy    = False
@@ -207,12 +208,16 @@ class QUTest:
         }
 
     def __del__(self):
-        #print("~QUTest", self)
-        pass
+        QUTest.trace("~QUTest", self)
 
     def exec_dsl(self, code):
         # pylint: disable=exec-used
         exec(code, self._dsl_dict)
+
+    @staticmethod
+    def trace(*args, **kwargs):
+        if QUTest._opt_trace:
+            print(*args, **kwargs)
 
     #-------------------------------------------------------------------------
     # QUTest Domain Specific Language (DSL) commands
@@ -295,7 +300,7 @@ class QUTest:
             # in fnmatchcase().
             if exp.startswith("@timestamp"):
                 self._timestamp += 1
-                exp = f"{self._timestamp:010d}" + exp[10:]
+                exp = f"{self._timestamp:010d}{exp[10:]}"
                 pattern = exp.replace("[", "\2")
                 pattern = pattern.replace("]", "\3")
             elif exp[0:9].isdigit():
@@ -325,7 +330,7 @@ class QUTest:
         elif self._state in (QUTest._FAIL, QUTest._SKIP):
             pass # ignore
         else:
-            assert 0, "invalid state in expect: " + exp
+            assert 0, "invalid state in expect: {exp}"
         return False
 
     # ensure DSL command .....................................................
@@ -363,7 +368,7 @@ class QUTest:
                     try:
                         arg = QSpy.QS_PRE.index(arg)
                     except Exception:
-                        assert 0, 'invalid global filter arg="' + arg + '"'
+                        assert 0, f'invalid global filter arg="{arg}"'
                 else:
                     is_neg = (arg < 0)
                     if is_neg:
@@ -813,15 +818,15 @@ class QUTest:
 
     # dummy callbacks --------------------------------------------------------
     def _dummy_on_reset(self):
-        #print("_dummy_on_reset")
+        QUTest.trace("_dummy_on_reset")
         self.expect("           QF_RUN")
 
     def _dummy_on_setup(self):
-        #print("_dummy_on_setup")
+        QUTest.trace("_dummy_on_setup")
         pass
 
     def _dummy_on_teardown(self):
-        #print("_dummy_on_teardown")
+        QUTest.trace("_dummy_on_teardown")
         pass
 
     # helper methods ---------------------------------------------------------
@@ -915,7 +920,7 @@ class QUTest:
                 break
 
     def _tran(self, state):
-        #print(f"tran({self._state}->{state})"
+        QUTest.trace(f"tran({self._state}->{state})")
         self._state = state
 
     def _test_end(self):
@@ -968,7 +973,6 @@ class QUTest:
     def _reset_target(self):
         if QUTest._host_exe[0]:
             if not QUTest._have_assert:
-                #print("quitting exe")
                 QUTest._quithost_exe()
 
             # lauch a new instance of the host executable
@@ -1015,7 +1019,7 @@ class QUTest:
     def _before_test(self, command):
         QUTest._num_failed += 1
         self._tran(QUTest._FAIL)
-        msg = '"' + command + '" before any test'
+        msg = f'"{command}" before any test'
         raise SyntaxError(msg)
 
     def _fail(self, err = "", exp = ""):
@@ -1060,6 +1064,7 @@ class QUTest:
     @staticmethod
     def _quithost_exe():
         if QUTest._host_exe[0] and QUTest._have_target:
+            QUTest.trace("quitting host exe...")
             QUTest._have_target = False
             QSpy.send_to(struct.pack("<B", QSpy.TO_TRG_RESET))
             time.sleep(QUTest.TIMEOUT) # wait until host-exe quits
@@ -1419,11 +1424,9 @@ class QSpy:
         # Create socket
         QSpy._sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         QSpy._sock.settimeout(QUTest.TIMEOUT) # timeout for blocking socket
-        #bufsize = QSpy._sock.getsockopt(socket.SOL_UDP, socket.SO_RCVBUF)
-        #print("SO_RCVBUF ", bufsize)
         try:
             QSpy._sock.bind(("0.0.0.0", QSpy._local_port))
-            #print("bind: ", ("0.0.0.0", QSpy._local_port))
+            QUTest.trace(f'bind: ("0.0.0.0", {QSpy._local_port})')
         except Exception:
             print("UDP Socket Error"\
                   "Can't bind the UDP socket\nto the specified local_host")
@@ -1527,7 +1530,7 @@ class QSpy:
             QSpy.trg_tstamp  = \
                  f"{trg_info[12]:02d}{trg_info[11]:02d}{trg_info[10]:02d}_"\
                  f"{trg_info[9]:02d}{trg_info[8]:02d}{trg_info[7]:02d}"
-            #print("Target:", QSpy.trg_tstamp)
+            QUTest.trace("Target:", QSpy.trg_tstamp)
             QUTest._have_info = True
 
         elif rec_id == QSpy._PKT_ATTACH_CONF:
@@ -1555,7 +1558,7 @@ class QSpy:
             tx_packet.extend(b"\0") # zero-terminate
         QSpy._sock.sendto(tx_packet, QSpy.host_udp)
         QSpy._tx_seq = (QSpy._tx_seq + 1) & 0xFF
-        #print("sendTo", QSpy._tx_seq)
+        QUTest.trace("sendTo", QSpy._tx_seq)
 
     @staticmethod
     def send_evt(ao_prio, signal, parameters = None):
@@ -1613,12 +1616,12 @@ def main():
     parser.add_argument('-l', '--log', nargs='?', default='', const='',
         help="Optional log directory (might not exist yet)")
     parser.add_argument('-o', '--opt', nargs='?', default='', const='',
-        help="xciob: x:exit-on-fail,i:inter,"
+        help="txciob: t:trace,x:exit-on-fail,i:inter,\n"
              "c:qspy-clear,o:qspy-save-txt,b:qspy-save-bin")
     parser.add_argument('scripts', nargs='*',
                         help="List (comma-separated) of test scripts to run")
     args = parser.parse_args()
-    #print(args)
+    QUTest.trace(args)
 
     # process command-line argumens...
     if args.exe != '':
@@ -1640,7 +1643,7 @@ def main():
             QSpy.host_udp[1] = int(qspy_conf[1])
         if len(qspy_conf) > 2 and not qspy_conf[2] == '':
             if QUTest._host_exe[0]:
-                QUTest._host_exe[1] = (QSpy.host_udp[0] + ":" + qspy_conf[2])
+                QUTest._host_exe[1] = f"{QSpy.host_udp[0]}:{qspy_conf[2]}"
             else:
                 print("\nTCP port specified without host executable\n")
                 return sys.exit(-1)
@@ -1654,7 +1657,7 @@ def main():
         except Exception:
             pass
         if os.path.isdir(log): # is arg.log a directory
-            log += "qutest" + run_id + ".txt"
+            log += f"qutest{run_id}.txt"
         else: # not a directory
             log = ''
             print("\nWrong directory for log output\n")
@@ -1665,6 +1668,7 @@ def main():
     if QUTest._host_exe[0]:
         QUTest._host_exe = tuple(QUTest._host_exe)
 
+    QUTest._opt_trace         = 't' in args.opt
     QUTest._opt_exit_on_fail  = 'x' in args.opt
     QUTest._opt_interactive   = 'i' in args.opt
     QUTest._opt_clear_qspy    = 'c' in args.opt
@@ -1672,7 +1676,7 @@ def main():
     QUTest._opt_save_qspy_bin = 'b' in args.opt
 
     if not args.scripts: # scripts not provided?
-        #print("applying default *.py")
+        QUTest.trace("applying default *.py")
         args.scripts = ['*.py'] # apply the default "*.py"
     scripts = []
     for script in args.scripts:
@@ -1686,16 +1690,16 @@ def main():
         print("\nFound no test scripts to run")
         return sys.exit(0)
 
-    #print("scripts:", scripts)
-    #print("host_exe:", QUTest._host_exe)
-    #print("debug:", QUTest._is_debug)
-    #print("_log_file:", log)
-    #print("host_udp:", QSpy.host_udp)
-    #print("opt: x", QUTest._opt_exit_on_fail)
-    #print("opt: i", QUTest._opt_interactive)
-    #print("opt: c", QUTest._opt_clear_qspy)
-    #print("opt: o", QUTest._opt_save_qspy_txt)
-    #print("opt: o", QUTest._opt_save_qspy_bin)
+    QUTest.trace("scripts:", scripts)
+    QUTest.trace("host_exe:", QUTest._host_exe)
+    QUTest.trace("debug:", QUTest._is_debug)
+    QUTest.trace("_log_file:", log)
+    QUTest.trace("host_udp:", QSpy.host_udp)
+    QUTest.trace("opt: x", QUTest._opt_exit_on_fail)
+    QUTest.trace("opt: i", QUTest._opt_interactive)
+    QUTest.trace("opt: c", QUTest._opt_clear_qspy)
+    QUTest.trace("opt: o", QUTest._opt_save_qspy_txt)
+    QUTest.trace("opt: o", QUTest._opt_save_qspy_bin)
     #return 0
 
     # init QSpy socket
