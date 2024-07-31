@@ -28,8 +28,8 @@
 * <info@state-machine.com>
 ============================================================================*/
 /*!
-* @date Last updated on: 2024-02-20
-* @version Last updated for version: 7.3.3
+* @date Last updated on: 2024-07-31
+* @version Last updated for version: 7.4.0
 *
 * @file
 * @brief main for QClean host utility
@@ -122,7 +122,7 @@ static FileType const l_fileTypes[] = {
     { ".project", 8, CR_FLG                           }, /* Eclipse project */
     { ".cproject",9, CR_FLG                           }, /* Eclipse CDT project */
 
-    { ".md5",     4, CR_FLG | TAB_FLG                 }, /* MD5 file */
+    { ".sha1",    5, CR_FLG | TAB_FLG                 }, /* Sha1 file */
     { ".pro",     4, CR_FLG | TAB_FLG                 }, /* Qt project */
 
     { ".m",       2, CR_FLG | TAB_FLG | LONG_LINE_FLG }, /* MATLAB */
