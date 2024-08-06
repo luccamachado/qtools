@@ -2,6 +2,11 @@
 
 #=============================================================================
 # QUTest Python scripting support
+#
+#                    Q u a n t u m  L e a P s
+#                    ------------------------
+#                    Modern Embedded Software
+#
 # Copyright (C) 2005 Quantum Leaps, LLC. All rights reserved.
 #
 # SPDX-License-Identifier: GPL-3.0-or-later OR LicenseRef-QL-commercial
