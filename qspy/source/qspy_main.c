@@ -103,7 +103,8 @@ static char const l_helpStr[] =
     "-c <COM_port>     COM1     com port input (default)\n"
 #elif (defined __linux) || (defined __linux__) || (defined __posix)
     "-c <serial_port>           /dev/ttyS0 serial port input (default)\n"
-    "-a <CAN_BUS>      can0     CAN-BUS serial port\n"
+    "-a <CAN_devcie>   can0     CAN-BUS device\n"
+    "-i <CAN_id>                CAN-BUS id\n"
 #endif
     "-b <baud_rate>    115200   baud rate for the com port\n"
     "-f <file_name>             file input (postprocessing)\n"
@@ -284,7 +285,7 @@ void QSPY_onPrintLn(void) {
 /*..........................................................................*/
 static QSpyStatus configure(int argc, char *argv[]) {
     static char const getoptStr[] =
-        "hq::u::v:r:kosmg:c:b:t::p:a:f:d::T:O:F:S:E:Q:P:B:C:";
+        "hq::u::v:r:kosmg:c:a:i:b:t::p:f:d::T:O:F:S:E:Q:P:B:C:";
 
     /* default configuration options... */
     QSpyConfig config = {
@@ -322,8 +323,6 @@ static QSpyStatus configure(int argc, char *argv[]) {
     /* parse the command-line parameters ...................................*/
 
     // TODO: Remove prints
-    FPRINTF_S(stderr, "Foo argc -> %s\n", str(argc));
-    FPRINTF_S(stderr, "Foo argv -> %s\n", str(argv));
     FPRINTF_S(stderr, "Foo Parse -> %s\n", getoptStr);
 
     while ((optChar = getopt(argc, argv, getoptStr)) != -1) {
@@ -426,6 +425,17 @@ static QSpyStatus configure(int argc, char *argv[]) {
                 l_link = SERIAL_LINK;
                 break;
             }
+            case 'a': { /* CAN-BUS input */
+                FPRINTF_S(stderr, "%s\n", "Foo CAN-BUS device");
+                //return QSPY_ERROR;
+                l_link = CAN_LINK;
+                break;
+            }
+            case 'i': { /* CAN-BUS id */
+                FPRINTF_S(stderr, "%s\n", "Foo CAN-BUS id");
+                return QSPY_ERROR;
+                break;
+            }
             case 'b': { /* baud rate */
                 if ((l_link != NO_LINK) && (l_link != SERIAL_LINK)) {
                     FPRINTF_S(stderr, "%s\n",
@@ -480,11 +490,6 @@ static QSpyStatus configure(int argc, char *argv[]) {
             case 'p': { /* TCP/IP port number */
                 FPRINTF_S(stderr, "%s\n",
                         "The -p option is obsolete, use -t[port]");
-                return QSPY_ERROR;
-                break;
-            }
-            case 'a': { /* CAN-BUS input */
-                FPRINTF_S(stderr, "%s\n", "Foo CAN-BUS");
                 return QSPY_ERROR;
                 break;
             }
