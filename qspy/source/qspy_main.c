@@ -320,6 +320,8 @@ static QSpyStatus configure(int argc, char *argv[]) {
     l_seqList[0] = '\0';
 
     /* parse the command-line parameters ...................................*/
+
+    FPRINTF_S(stderr, "%s%s\n", "Foo Parse -> ", getoptStr);
     while ((optChar = getopt(argc, argv, getoptStr)) != -1) {
         switch (optChar) {
             case 'q': { /* quiet mode */
@@ -478,8 +480,7 @@ static QSpyStatus configure(int argc, char *argv[]) {
                 break;
             }
             case 'a': { /* CAN-BUS input */
-                FPRINTF_S(stderr, "%s\n",
-                        "Foo CAN-BUS");
+                FPRINTF_S(stderr, "%s\n", "Foo CAN-BUS");
                 return QSPY_ERROR;
                 break;
             }
