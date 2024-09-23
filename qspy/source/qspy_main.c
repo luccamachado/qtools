@@ -58,6 +58,7 @@ static FILE *l_matFile = (FILE *)0;
 static FILE *l_seqFile = (FILE *)0;
 
 static char  l_comPort    [QS_FNAME_LEN_MAX];
+static char  l_canDev     [QS_FNAME_LEN_MAX];
 static char  l_inpFileName[QS_FNAME_LEN_MAX];
 static char  l_outFileName[QS_FNAME_LEN_MAX];
 static char  l_savFileName[QS_FNAME_LEN_MAX];
@@ -317,6 +318,7 @@ static QSpyStatus configure(int argc, char *argv[]) {
     STRNCPY_S(l_comPort, sizeof(l_comPort), "COM1");
 #elif (defined __linux) || (defined __linux__) || (defined __posix)
     STRNCPY_S(l_comPort, sizeof(l_comPort), "/dev/ttyS0");
+    STRNCPY_S(l_canDev, sizeof(l_canDev), "can0");
 #endif
     l_seqList[0] = '\0';
 
@@ -417,7 +419,7 @@ static QSpyStatus configure(int argc, char *argv[]) {
             case 'c': { /* COM port */
                 if ((l_link != NO_LINK) && (l_link != SERIAL_LINK)) {
                     FPRINTF_S(stderr, "%s\n",
-                            "The -c option is incompatible with -t/-f");
+                            "The -c option is incompatible with -t/-f/-a");
                     return QSPY_ERROR;
                 }
                 STRNCPY_S(l_comPort, sizeof(l_comPort), optarg);
@@ -426,12 +428,22 @@ static QSpyStatus configure(int argc, char *argv[]) {
                 break;
             }
             case 'a': { /* CAN-BUS input */
-                FPRINTF_S(stderr, "%s\n", "Foo CAN-BUS device");
-                //return QSPY_ERROR;
+                if ((l_link != NO_LINK) && (l_link != CAN_LINK)) {
+                    FPRINTF_S(stderr, "%s\n",
+                            "The -a option is incompatible with -c/-t/-f");
+                    return QSPY_ERROR;
+                }
+                STRNCPY_S(l_canDev, sizeof(l_canDev), optarg);
+                PRINTF_S("-a %s\n", l_canDev);
                 l_link = CAN_LINK;
                 break;
             }
             case 'i': { /* CAN-BUS id */
+                if ((l_link != NO_LINK) && (l_link != CAN_LINK)) {
+                    FPRINTF_S(stderr, "%s\n",
+                            "The -i option is incompatible with -c/-t/-f");
+                    return QSPY_ERROR;
+                }
                 FPRINTF_S(stderr, "%s\n", "Foo CAN-BUS id");
                 return QSPY_ERROR;
                 break;
@@ -454,7 +466,7 @@ static QSpyStatus configure(int argc, char *argv[]) {
             case 'f': { /* File input */
                 if (l_link != NO_LINK) {
                     FPRINTF_S(stderr, "%s\n",
-                            "The -f option is incompatible with -c/-b/-t");
+                            "The -f option is incompatible with -c/-b/-t/-a");
                     return QSPY_ERROR;
                 }
                 STRNCPY_S(l_inpFileName, sizeof(l_inpFileName), optarg);
@@ -477,7 +489,7 @@ static QSpyStatus configure(int argc, char *argv[]) {
             case 't': { /* TCP/IP input */
                 if ((l_link != NO_LINK) && (l_link != TCP_LINK)) {
                     FPRINTF_S(stderr, "%s\n",
-                            "The -t option is incompatible with -c/-b/-f");
+                            "The -t option is incompatible with -c/-b/-f/-a");
                     return QSPY_ERROR;
                 }
                 if (optarg != NULL) { /* is optional argument provided? */
