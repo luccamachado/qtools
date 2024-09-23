@@ -72,6 +72,7 @@ static char  l_seqList[QS_SEQ_LIST_LEN_MAX];
 static int   l_bePort   = 7701;   /* default UDP port  */
 static int   l_tcpPort  = 6601;   /* default TCP port */
 static int   l_baudRate = 115200; /* default serial baud rate */
+static int   l_canID    = 1; /* default serial baud rate */
 
 /* color rendering */
 extern char const * const l_darkPalette[];
@@ -107,7 +108,7 @@ static char const l_helpStr[] =
     "-a <CAN_devcie>   can0     CAN-BUS device\n"
     "-i <CAN_id>                CAN-BUS id\n"
 #endif
-    "-b <baud_rate>    115200   baud rate for the com port\n"
+    "-b <baud_rate>    115200   baud rate for the com port/can device\n"
     "-f <file_name>             file input (postprocessing)\n"
     "-d [file_name]             dictionary files\n"
     "-T <tstamp_size>  4        QS timestamp size     (bytes)\n"
@@ -324,9 +325,6 @@ static QSpyStatus configure(int argc, char *argv[]) {
 
     /* parse the command-line parameters ...................................*/
 
-    // TODO: Remove prints
-    FPRINTF_S(stderr, "Foo Parse -> %s\n", getoptStr);
-
     while ((optChar = getopt(argc, argv, getoptStr)) != -1) {
         switch (optChar) {
             case 'q': { /* quiet mode */
@@ -444,7 +442,12 @@ static QSpyStatus configure(int argc, char *argv[]) {
                             "The -i option is incompatible with -c/-t/-f");
                     return QSPY_ERROR;
                 }
-                FPRINTF_S(stderr, "%s\n", "Foo CAN-BUS id");
+                l_canID = (int)strtol(optarg, NULL, 10);
+                if (l_canID > 0x1FFFFFFF) {
+                    FPRINTF_S(stderr, "incorrect CAN ID: %s\n", optarg);
+                    return QSPY_ERROR;
+                }
+                PRINTF_S("-i %d\n", l_canID);
                 return QSPY_ERROR;
                 break;
             }
@@ -460,7 +463,7 @@ static QSpyStatus configure(int argc, char *argv[]) {
                     return QSPY_ERROR;
                 }
                 PRINTF_S("-b %d\n", l_baudRate);
-                l_link = SERIAL_LINK;
+                l_link = SERIAL_LINK; // TODO: WHAT IS THE EFFECT OF REMOVING THIS?
                 break;
             }
             case 'f': { /* File input */
