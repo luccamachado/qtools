@@ -44,7 +44,8 @@ typedef enum {
     NO_LINK,
     FILE_LINK,
     SERIAL_LINK,
-    TCP_LINK
+    TCP_LINK,
+    CAN_LINK
 } TargetLink;
 
 static TargetLink l_link = NO_LINK;
@@ -283,7 +284,7 @@ void QSPY_onPrintLn(void) {
 /*..........................................................................*/
 static QSpyStatus configure(int argc, char *argv[]) {
     static char const getoptStr[] =
-        "hq::u::v:r:kosmg:c:b:t::p:f:d::T:O:F:S:E:Q:P:B:C:";
+        "hq::u::v:r:kosmg:c:b:t::p:a:f:d::T:O:F:S:E:Q:P:B:C:";
 
     /* default configuration options... */
     QSpyConfig config = {
@@ -473,6 +474,12 @@ static QSpyStatus configure(int argc, char *argv[]) {
             case 'p': { /* TCP/IP port number */
                 FPRINTF_S(stderr, "%s\n",
                         "The -p option is obsolete, use -t[port]");
+                return QSPY_ERROR;
+                break;
+            }
+            case 'a': { /* CAN-BUS input */
+                FPRINTF_S(stderr, "%s\n",
+                        "Foo CAN-BUS");
                 return QSPY_ERROR;
                 break;
             }
