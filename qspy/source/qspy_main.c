@@ -322,8 +322,8 @@ static QSpyStatus configure(int argc, char *argv[]) {
     /* parse the command-line parameters ...................................*/
 
     // TODO: Remove prints
-    FPRINTF_S(stderr, "Foo argc -> %s\n", argc);
-    FPRINTF_S(stderr, "Foo argv -> %s\n", argv);
+    FPRINTF_S(stderr, "Foo argc -> %s\n", str(argc));
+    FPRINTF_S(stderr, "Foo argv -> %s\n", str(argv));
     FPRINTF_S(stderr, "Foo Parse -> %s\n", getoptStr);
 
     while ((optChar = getopt(argc, argv, getoptStr)) != -1) {
