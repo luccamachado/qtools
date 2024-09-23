@@ -101,7 +101,8 @@ static char const l_helpStr[] =
 #ifdef _WIN32
     "-c <COM_port>     COM1    com port input (default)\n"
 #elif (defined __linux) || (defined __linux__) || (defined __posix)
-    "-c <serial_port>  /dev/ttyS0 serial port input (default)\n"
+    "-c <serial_port>           /dev/ttyS0 serial port input (default)\n"
+    "-a <CAN_BUS>      can0     CAN-BUS serial port\n"
 #endif
     "-b <baud_rate>    115200  baud rate for the com port\n"
     "-f <file_name>            file input (postprocessing)\n"
